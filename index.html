@@ -1,0 +1,2559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
+    <title>Lockdown Store</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        /* ===== CSS Variables ===== */
+        :root {
+            --primary: #1a237e;
+            --primary-light: #283593;
+            --primary-dark: #0d1445;
+            --secondary: #ff6b6b;
+            --accent: #4ecdc4;
+            --gold: #ffd93d;
+            --success: #6bcb77;
+            --danger: #ff6b6b;
+            --warning: #ffd93d;
+            --info: #4d96ff;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #2d3436;
+            --text-light: #636e72;
+            --text-muted: #b2bec3;
+            --border: #dfe6e9;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 8px 30px rgba(0, 0, 0, 0.15);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --radius-xs: 6px;
+            --header-height: 60px;
+            --bottom-nav-height: 64px;
+            --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* ===== Reset & Base ===== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding-top: var(--header-height);
+            padding-bottom: calc(var(--bottom-nav-height) + 16px);
+            min-height: 100vh;
+            -webkit-tap-highlight-color: transparent;
+        }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+        img {
+            max-width: 100%;
+            display: block;
+        }
+        button {
+            font-family: inherit;
+            cursor: pointer;
+            border: none;
+            outline: none;
+            background: none;
+            font-size: inherit;
+        }
+        input,
+        textarea,
+        select {
+            font-family: inherit;
+            font-size: inherit;
+            outline: none;
+            border: none;
+        }
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--border);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-light);
+            border-radius: 10px;
+        }
+
+        /* ===== Utilities ===== */
+        .hidden {
+            display: none !important;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .mt-8 {
+            margin-top: 8px;
+        }
+        .mt-16 {
+            margin-top: 16px;
+        }
+        .mb-16 {
+            margin-bottom: 16px;
+        }
+        .flex-center {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gap-8 {
+            gap: 8px;
+        }
+        .gap-12 {
+            gap: 12px;
+        }
+        .gap-16 {
+            gap: 16px;
+        }
+
+        /* ===== Toast ===== */
+        #toast-container {
+            position: fixed;
+            top: 80px;
+            right: 16px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-width: 360px;
+            width: 100%;
+        }
+        .toast {
+            background: var(--card-bg);
+            color: var(--text);
+            padding: 14px 20px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-hover);
+            border-left: 4px solid var(--primary);
+            animation: slideInRight 0.4s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        .toast.success {
+            border-left-color: var(--success);
+        }
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+        @keyframes slideInRight {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* ===== Loading Spinner ===== */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 30px auto;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .loader-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9998;
+        }
+
+        /* ===== Header ===== */
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: var(--card-bg);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 1000;
+        }
+        #header .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.5px;
+        }
+        #header .logo span {
+            color: var(--secondary);
+        }
+        #header .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        #header .header-actions button {
+            font-size: 20px;
+            color: var(--text-light);
+            transition: var(--transition);
+            padding: 4px;
+        }
+        #header .header-actions button:hover {
+            color: var(--primary);
+        }
+        .auth-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            display: inline-block;
+            transition: var(--transition);
+            border: 2px solid var(--card-bg);
+            box-shadow: 0 0 0 2px var(--border);
+        }
+        .auth-dot.logged-in {
+            background: var(--success);
+            box-shadow: 0 0 0 2px var(--success);
+        }
+
+        /* ===== Bottom Navigation ===== */
+        #bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: var(--bottom-nav-height);
+            background: var(--card-bg);
+            box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            z-index: 1000;
+            border-top: 1px solid var(--border);
+        }
+        #bottom-nav .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 10px;
+            color: var(--text-muted);
+            transition: var(--transition);
+            position: relative;
+            padding: 4px 12px;
+            border-radius: var(--radius-xs);
+            min-width: 56px;
+        }
+        #bottom-nav .nav-item i {
+            font-size: 20px;
+            margin-bottom: 2px;
+            transition: var(--transition);
+        }
+        #bottom-nav .nav-item.active {
+            color: var(--primary);
+        }
+        #bottom-nav .nav-item.active i {
+            transform: scale(1.1);
+        }
+        #bottom-nav .nav-item .badge {
+            position: absolute;
+            top: 0;
+            right: 4px;
+            background: var(--danger);
+            color: #fff;
+            font-size: 9px;
+            font-weight: 600;
+            min-width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 4px;
+            transform: translate(4px, -4px);
+        }
+
+        /* ===== Page Sections ===== */
+        .page-section {
+            display: none;
+            padding: 16px 16px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            animation: fadeUp 0.3s ease;
+        }
+        .page-section.active {
+            display: block;
+        }
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--primary);
+        }
+
+        /* ===== Hero Slider ===== */
+        #hero-slider {
+            position: relative;
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 20px;
+            background: var(--primary-dark);
+            aspect-ratio: 16/9;
+            max-height: 320px;
+        }
+        #hero-slider .slide {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+            transition: opacity 0.5s ease;
+        }
+        #hero-slider .slide.active {
+            display: block;
+        }
+        #hero-slider .slide-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: #fff;
+            font-size: 32px;
+            font-weight: 700;
+        }
+        #hero-slider .slider-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, 0.5);
+            color: #fff;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            font-size: 16px;
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 5;
+            backdrop-filter: blur(4px);
+        }
+        #hero-slider .slider-btn:hover {
+            background: rgba(0, 0, 0, 0.7);
+        }
+        #hero-slider .slider-btn.prev {
+            left: 8px;
+        }
+        #hero-slider .slider-btn.next {
+            right: 8px;
+        }
+        #hero-slider .indicators {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 5;
+        }
+        #hero-slider .indicators span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        #hero-slider .indicators span.active {
+            background: #fff;
+            width: 20px;
+            border-radius: 10px;
+        }
+
+        /* ===== Category Bubbles ===== */
+        #category-scroll {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding: 4px 0 12px;
+            scroll-snap-type: x mandatory;
+            -webkit-overflow-scrolling: touch;
+            margin-bottom: 12px;
+        }
+        #category-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .category-bubble {
+            flex-shrink: 0;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #fff;
+            scroll-snap-align: start;
+            transition: var(--transition);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            white-space: nowrap;
+        }
+        .category-bubble:hover {
+            transform: scale(1.05);
+        }
+        .category-bubble.active {
+            transform: scale(1.08);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        /* ===== Product Grid ===== */
+        #product-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            padding: 4px 0;
+        }
+        @media (min-width: 600px) {
+            #product-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 18px;
+            }
+        }
+        @media (min-width: 900px) {
+            #product-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 20px;
+            }
+        }
+
+        .product-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            cursor: pointer;
+            position: relative;
+        }
+        .product-card:hover {
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-4px);
+        }
+        .product-card .img-wrap {
+            aspect-ratio: 1/1;
+            background: var(--bg);
+            overflow: hidden;
+            position: relative;
+        }
+        .product-card .img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+        .product-card:hover .img-wrap img {
+            transform: scale(1.05);
+        }
+        .product-card .info {
+            padding: 10px 12px 12px;
+        }
+        .product-card .info .name {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .product-card .info .category {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        .product-card .info .price {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-top: 4px;
+        }
+        .product-card .actions {
+            display: flex;
+            gap: 6px;
+            padding: 0 12px 12px;
+        }
+        .product-card .actions button {
+            flex: 1;
+            padding: 8px 0;
+            border-radius: var(--radius-xs);
+            font-size: 12px;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .product-card .actions .btn-cart {
+            background: var(--primary);
+            color: #fff;
+        }
+        .product-card .actions .btn-cart:hover {
+            background: var(--primary-light);
+        }
+        .product-card .actions .btn-wish {
+            background: var(--border);
+            color: var(--text-light);
+            flex: 0.4;
+        }
+        .product-card .actions .btn-wish:hover {
+            background: var(--danger);
+            color: #fff;
+        }
+        .product-card .actions .btn-wish.wish-active {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        /* ===== Modal ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 16px;
+            animation: fadeIn 0.25s ease;
+        }
+        .modal-overlay.open {
+            display: flex;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        .modal {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            max-width: 520px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            animation: slideUp 0.3s ease;
+            box-shadow: var(--shadow-hover);
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .modal .modal-close {
+            float: right;
+            font-size: 22px;
+            color: var(--text-light);
+            cursor: pointer;
+            transition: var(--transition);
+            padding: 4px;
+        }
+        .modal .modal-close:hover {
+            color: var(--danger);
+        }
+        .modal .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        /* ===== Auth Modal ===== */
+        .auth-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 16px;
+        }
+        .auth-tabs button {
+            flex: 1;
+            padding: 10px;
+            font-weight: 500;
+            color: var(--text-light);
+            transition: var(--transition);
+            border-bottom: 3px solid transparent;
+        }
+        .auth-tabs button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        .auth-form .form-group {
+            margin-bottom: 14px;
+        }
+        .auth-form .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: var(--text-light);
+        }
+        .auth-form .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xs);
+            transition: var(--transition);
+            background: var(--bg);
+        }
+        .auth-form .form-group input:focus {
+            border-color: var(--primary);
+            background: #fff;
+        }
+        .auth-form .btn-submit {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: #fff;
+            border-radius: var(--radius-xs);
+            font-weight: 600;
+            transition: var(--transition);
+            margin-top: 4px;
+        }
+        .auth-form .btn-submit:hover {
+            background: var(--primary-light);
+        }
+        .auth-form .error-text {
+            color: var(--danger);
+            font-size: 13px;
+            margin-top: 6px;
+        }
+
+        /* ===== Cart / Wishlist Items ===== */
+        .cart-item,
+        .wishlist-item {
+            display: flex;
+            gap: 12px;
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        .cart-item img,
+        .wishlist-item img {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-xs);
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .cart-item .item-detail,
+        .wishlist-item .item-detail {
+            flex: 1;
+        }
+        .cart-item .item-detail .name {
+            font-weight: 500;
+            font-size: 14px;
+        }
+        .cart-item .item-detail .price {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 14px;
+        }
+        .cart-item .qty-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+        .cart-item .qty-control button {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--border);
+            font-weight: 700;
+            transition: var(--transition);
+        }
+        .cart-item .qty-control button:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+        .cart-item .qty-control span {
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
+        }
+        .cart-item .item-total {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--primary);
+        }
+        .cart-item .remove-btn,
+        .wishlist-item .remove-btn {
+            color: var(--danger);
+            font-size: 18px;
+            padding: 4px 8px;
+            transition: var(--transition);
+        }
+        .cart-item .remove-btn:hover,
+        .wishlist-item .remove-btn:hover {
+            transform: scale(1.2);
+        }
+        .wishlist-item .move-btn {
+            background: var(--primary);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: var(--radius-xs);
+            font-size: 12px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        .wishlist-item .move-btn:hover {
+            background: var(--primary-light);
+        }
+
+        /* ===== Order Cards ===== */
+        .order-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 16px;
+            margin-bottom: 14px;
+        }
+        .order-card .order-header {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        .order-card .order-header .order-id {
+            font-weight: 600;
+            font-size: 13px;
+        }
+        .order-card .order-header .order-date {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        .order-card .order-status {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .order-card .order-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .order-card .order-status.confirmed {
+            background: #cce5ff;
+            color: #004085;
+        }
+        .order-card .order-status.preparing {
+            background: #d4edda;
+            color: #155724;
+        }
+        .order-card .order-status.shipped {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        .order-card .order-status.delivered {
+            background: #d4edda;
+            color: #155724;
+        }
+        .order-card .order-status.cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .order-card .order-items {
+            font-size: 13px;
+            padding: 6px 0;
+        }
+        .order-card .order-items span {
+            display: inline-block;
+            background: var(--bg);
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin: 2px 4px 2px 0;
+            font-size: 12px;
+        }
+        .order-card .order-total {
+            font-weight: 700;
+            font-size: 16px;
+            color: var(--primary);
+            margin-top: 6px;
+        }
+        .order-card .order-address {
+            font-size: 13px;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        /* ===== Admin Tables ===== */
+        .table-wrap {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 12px 0;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--border);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 600px;
+        }
+        table th {
+            background: var(--primary);
+            color: #fff;
+            padding: 10px 12px;
+            text-align: left;
+            white-space: nowrap;
+        }
+        table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+        table tr:hover td {
+            background: #f8f9fa;
+        }
+        table td img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: var(--radius-xs);
+        }
+        table .actions-cell {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        table .actions-cell button {
+            padding: 4px 12px;
+            border-radius: var(--radius-xs);
+            font-size: 12px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        table .actions-cell .btn-edit {
+            background: var(--info);
+            color: #fff;
+        }
+        table .actions-cell .btn-edit:hover {
+            background: #3a7bd5;
+        }
+        table .actions-cell .btn-delete {
+            background: var(--danger);
+            color: #fff;
+        }
+        table .actions-cell .btn-delete:hover {
+            background: #e55a5a;
+        }
+        table .status-select {
+            padding: 4px 8px;
+            border-radius: var(--radius-xs);
+            border: 1px solid var(--border);
+            background: #fff;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        @media (min-width: 600px) {
+            .admin-stats {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        .stat-card {
+            background: var(--card-bg);
+            padding: 16px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        .stat-card .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .stat-card .stat-label {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        /* ===== Admin Sidebar ===== */
+        #admin-sidebar {
+            display: none;
+        }
+        @media (min-width: 768px) {
+            body.admin-page {
+                padding-left: 250px;
+                padding-bottom: 0;
+            }
+            #admin-sidebar {
+                display: block;
+                position: fixed;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 250px;
+                background: var(--primary-dark);
+                color: #fff;
+                padding: 24px 16px;
+                overflow-y: auto;
+                z-index: 1000;
+            }
+            #admin-sidebar .sidebar-logo {
+                font-size: 22px;
+                font-weight: 700;
+                margin-bottom: 30px;
+                color: #fff;
+            }
+            #admin-sidebar .sidebar-logo span {
+                color: var(--gold);
+            }
+            #admin-sidebar .sidebar-link {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px 16px;
+                border-radius: var(--radius-sm);
+                color: rgba(255, 255, 255, 0.7);
+                transition: var(--transition);
+                margin-bottom: 4px;
+                font-size: 14px;
+                font-weight: 500;
+            }
+            #admin-sidebar .sidebar-link:hover {
+                background: rgba(255, 255, 255, 0.1);
+                color: #fff;
+            }
+            #admin-sidebar .sidebar-link.active {
+                background: rgba(255, 255, 255, 0.15);
+                color: #fff;
+            }
+            #admin-sidebar .sidebar-link i {
+                width: 20px;
+                text-align: center;
+            }
+            #bottom-nav {
+                display: none;
+            }
+            #header .menu-toggle {
+                display: none;
+            }
+        }
+        @media (max-width: 767px) {
+            #admin-sidebar {
+                position: fixed;
+                top: 0;
+                left: -280px;
+                bottom: 0;
+                width: 280px;
+                background: var(--primary-dark);
+                color: #fff;
+                padding: 24px 16px;
+                overflow-y: auto;
+                z-index: 2000;
+                transition: var(--transition);
+            }
+            #admin-sidebar.open {
+                left: 0;
+            }
+            #admin-sidebar .sidebar-logo {
+                font-size: 20px;
+                font-weight: 700;
+                margin-bottom: 24px;
+            }
+            #admin-sidebar .sidebar-logo span {
+                color: var(--gold);
+            }
+            #admin-sidebar .sidebar-link {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px 16px;
+                border-radius: var(--radius-sm);
+                color: rgba(255, 255, 255, 0.7);
+                transition: var(--transition);
+                font-size: 14px;
+                font-weight: 500;
+            }
+            #admin-sidebar .sidebar-link:hover {
+                background: rgba(255, 255, 255, 0.1);
+                color: #fff;
+            }
+            #admin-sidebar .sidebar-link.active {
+                background: rgba(255, 255, 255, 0.15);
+                color: #fff;
+            }
+            #admin-sidebar .sidebar-link i {
+                width: 20px;
+                text-align: center;
+            }
+            #admin-sidebar-overlay {
+                display: none;
+                position: fixed;
+                inset: 0;
+                background: rgba(0, 0, 0, 0.4);
+                z-index: 1999;
+            }
+            #admin-sidebar-overlay.open {
+                display: block;
+            }
+            body.admin-page #header .menu-toggle {
+                display: block;
+            }
+        }
+
+        /* ===== Profile ===== */
+        .profile-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow);
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .profile-card .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 auto 12px;
+        }
+        .profile-card .profile-field {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .profile-card .profile-field .label {
+            color: var(--text-light);
+            font-size: 13px;
+        }
+        .profile-card .profile-field .value {
+            font-weight: 500;
+        }
+
+        /* ===== Checkout Modal ===== */
+        .checkout-summary {
+            background: var(--bg);
+            padding: 12px;
+            border-radius: var(--radius-sm);
+            margin: 12px 0;
+            font-size: 14px;
+        }
+        .checkout-summary .total {
+            font-weight: 700;
+            font-size: 18px;
+            color: var(--primary);
+        }
+
+        /* ===== Empty State ===== */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+        .empty-state i {
+            font-size: 48px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        .empty-state h3 {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        .empty-state p {
+            font-size: 14px;
+        }
+
+        /* ===== Contact Form ===== */
+        .contact-form .form-group {
+            margin-bottom: 14px;
+        }
+        .contact-form .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: var(--text-light);
+        }
+        .contact-form .form-group input,
+        .contact-form .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-xs);
+            transition: var(--transition);
+            background: var(--bg);
+        }
+        .contact-form .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        .contact-form .form-group input:focus,
+        .contact-form .form-group textarea:focus {
+            border-color: var(--primary);
+            background: #fff;
+        }
+        .contact-form .btn-submit {
+            padding: 12px 28px;
+            background: var(--primary);
+            color: #fff;
+            border-radius: var(--radius-xs);
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        .contact-form .btn-submit:hover {
+            background: var(--primary-light);
+        }
+
+        /* ===== Admin Bottom Nav (mobile) ===== */
+        .admin-bottom-nav {
+            display: none;
+        }
+        @media (max-width: 767px) {
+            body.admin-page .admin-bottom-nav {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: var(--bottom-nav-height);
+                background: var(--card-bg);
+                box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.06);
+                z-index: 1000;
+                border-top: 1px solid var(--border);
+                align-items: center;
+                justify-content: space-around;
+            }
+            .admin-bottom-nav .nav-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                font-size: 9px;
+                color: var(--text-muted);
+                transition: var(--transition);
+                padding: 4px 8px;
+            }
+            .admin-bottom-nav .nav-item i {
+                font-size: 18px;
+            }
+            .admin-bottom-nav .nav-item.active {
+                color: var(--primary);
+            }
+            body.admin-page {
+                padding-bottom: calc(var(--bottom-nav-height) + 16px);
+            }
+        }
+
+        /* ===== Responsive tweaks ===== */
+        @media (max-width: 400px) {
+            .product-card .info .name {
+                font-size: 12px;
+            }
+            .product-card .info .price {
+                font-size: 14px;
+            }
+            .product-card .actions button {
+                font-size: 10px;
+                padding: 6px 0;
+            }
+            .modal {
+                padding: 16px;
+            }
+        }
+        @media (min-width: 1200px) {
+            #product-grid {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+
+        /* Slider image preview in admin */
+        .slider-preview {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .slider-preview .slide-item {
+            background: var(--card-bg);
+            padding: 8px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+        .slider-preview .slide-item img {
+            width: 120px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: var(--radius-xs);
+        }
+        .slider-preview .slide-item button {
+            margin-top: 4px;
+            padding: 4px 12px;
+            background: var(--danger);
+            color: #fff;
+            border-radius: var(--radius-xs);
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== TOAST CONTAINER ===== -->
+    <div id="toast-container"></div>
+
+    <!-- ===== HEADER ===== -->
+    <header id="header">
+        <div class="logo">Lockdown <span>Store</span></div>
+        <div class="header-actions">
+            <button id="searchToggle" aria-label="Search"><i class="fas fa-search"></i></button>
+            <button id="authToggle" aria-label="Account">
+                <span class="auth-dot" id="authDot"></span>
+            </button>
+            <button class="menu-toggle" id="menuToggle" aria-label="Menu" style="display:none;">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ===== BOTTOM NAVIGATION ===== -->
+    <nav id="bottom-nav">
+        <a href="#home" class="nav-item active" data-page="home"><i class="fas fa-home"></i><span>Home</span></a>
+        <a href="#wishlist" class="nav-item" data-page="wishlist"><i class="fas fa-heart"></i><span>Wishlist</span><span class="badge hidden" id="wishBadge">0</span></a>
+        <a href="#cart" class="nav-item" data-page="cart"><i class="fas fa-shopping-cart"></i><span>Cart</span><span class="badge hidden" id="cartBadge">0</span></a>
+        <a href="#menu" class="nav-item" data-page="menu"><i class="fas fa-bars"></i><span>Menu</span></a>
+    </nav>
+
+    <!-- ===== PAGE SECTIONS ===== -->
+
+    <!-- HOME -->
+    <section id="page-home" class="page-section active">
+        <div id="hero-slider">
+            <button class="slider-btn prev" id="sliderPrev"><i class="fas fa-chevron-left"></i></button>
+            <button class="slider-btn next" id="sliderNext"><i class="fas fa-chevron-right"></i></button>
+            <div id="sliderContainer"></div>
+            <div class="indicators" id="sliderIndicators"></div>
+        </div>
+        <div id="category-scroll"></div>
+        <div id="product-grid"></div>
+    </section>
+
+    <!-- SEARCH -->
+    <section id="page-search" class="page-section">
+        <div style="margin-bottom:16px;">
+            <input type="text" id="searchInput" placeholder="Search products..." style="width:100%;padding:12px 16px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:16px;background:var(--card-bg);" />
+        </div>
+        <div id="searchResults" class="product-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;"></div>
+    </section>
+
+    <!-- CART -->
+    <section id="page-cart" class="page-section">
+        <h2 class="section-title">Your Cart</h2>
+        <div id="cartContainer"></div>
+        <div id="cartTotal" style="text-align:right;font-size:18px;font-weight:700;color:var(--primary);margin-top:8px;"></div>
+        <button id="checkoutBtn" class="btn-submit" style="width:100%;padding:14px;background:var(--success);color:#fff;border-radius:var(--radius-sm);font-weight:600;font-size:16px;margin-top:12px;">Proceed to Checkout</button>
+    </section>
+
+    <!-- WISHLIST -->
+    <section id="page-wishlist" class="page-section">
+        <h2 class="section-title">Your Wishlist</h2>
+        <div id="wishlistContainer"></div>
+    </section>
+
+    <!-- ORDERS -->
+    <section id="page-orders" class="page-section">
+        <h2 class="section-title">My Orders</h2>
+        <div id="ordersContainer"></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="page-profile" class="page-section">
+        <h2 class="section-title">Profile</h2>
+        <div class="profile-card" id="profileCard"></div>
+        <button id="logoutBtn" style="width:100%;padding:12px;background:var(--danger);color:#fff;border-radius:var(--radius-sm);font-weight:600;margin-top:12px;">Logout</button>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="page-about" class="page-section">
+        <h2 class="section-title">About Lockdown Store</h2>
+        <div style="background:var(--card-bg);padding:24px;border-radius:var(--radius);box-shadow:var(--shadow);">
+            <p style="font-size:15px;line-height:1.8;">Welcome to <strong>Lockdown Store</strong> — your premier destination for quality products delivered right to your doorstep. We understand the importance of convenience and reliability, especially during challenging times.</p>
+            <p style="font-size:15px;line-height:1.8;margin-top:12px;">Founded with a mission to make shopping accessible and enjoyable, Lockdown Store offers a curated selection of products that meet your everyday needs. From essentials to luxuries, we've got you covered with competitive prices and exceptional service.</p>
+            <p style="font-size:15px;line-height:1.8;margin-top:12px;">Shop with confidence, stay safe, and enjoy the convenience of modern e-commerce with Lockdown Store.</p>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="page-contact" class="page-section">
+        <h2 class="section-title">Contact Us</h2>
+        <div style="background:var(--card-bg);padding:24px;border-radius:var(--radius);box-shadow:var(--shadow);">
+            <form id="contactForm" class="contact-form">
+                <div class="form-group">
+                    <label>Your Name</label>
+                    <input type="text" id="contactName" placeholder="Enter your name" required />
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="contactEmail" placeholder="Enter your email" required />
+                </div>
+                <div class="form-group">
+                    <label>Message</label>
+                    <textarea id="contactMessage" placeholder="Write your message here..." required></textarea>
+                </div>
+                <button type="submit" class="btn-submit">Send Message</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- ===== AUTH MODAL ===== -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal">
+            <span class="modal-close" id="authModalClose"><i class="fas fa-times"></i></span>
+            <div class="auth-tabs">
+                <button class="active" data-tab="login">Login</button>
+                <button data-tab="register">Register</button>
+            </div>
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required />
+                </div>
+                <div id="loginError" class="error-text"></div>
+                <button type="submit" class="btn-submit">Login</button>
+            </form>
+            <form id="registerForm" class="auth-form hidden">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="regUsername" placeholder="Enter username" required />
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="regPhone" placeholder="Enter phone number" required />
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="regEmail" placeholder="Enter your email" required />
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="regPassword" placeholder="Create a password" required />
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="regConfirm" placeholder="Confirm your password" required />
+                </div>
+                <div id="registerError" class="error-text"></div>
+                <button type="submit" class="btn-submit">Create Account</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== PRODUCT DETAIL MODAL ===== -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal">
+            <span class="modal-close" id="productModalClose"><i class="fas fa-times"></i></span>
+            <div id="productDetailContent"></div>
+        </div>
+    </div>
+
+    <!-- ===== CHECKOUT MODAL ===== -->
+    <div class="modal-overlay" id="checkoutModal">
+        <div class="modal">
+            <span class="modal-close" id="checkoutModalClose"><i class="fas fa-times"></i></span>
+            <h3 class="modal-title">Checkout</h3>
+            <form id="checkoutForm">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="checkoutName" required />
+                </div>
+                <div class="form-group">
+                    <label>Phone Number</label>
+                    <input type="tel" id="checkoutPhone" required />
+                </div>
+                <div class="form-group">
+                    <label>Delivery Address</label>
+                    <input type="text" id="checkoutAddress" placeholder="Full delivery address" required />
+                </div>
+                <div class="checkout-summary" id="checkoutSummary"></div>
+                <button type="submit" class="btn-submit" style="background:var(--success);">Place Order</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MENU OVERLAY ===== -->
+    <div class="modal-overlay" id="menuOverlay">
+        <div class="modal" style="max-width:400px;">
+            <span class="modal-close" id="menuClose"><i class="fas fa-times"></i></span>
+            <div id="menuLinks" style="display:flex;flex-direction:column;gap:6px;margin-top:8px;"></div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ========================== SCRIPTS =========================== -->
+    <!-- ============================================================ -->
+
+    <!-- Firebase v9 Modular SDK -->
+    <script type="importmap">
+        {
+            "imports": {
+                "firebase/app": "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js",
+                "firebase/auth": "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js",
+                "firebase/database": "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js",
+                "firebase/analytics": "https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js"
+            }
+        }
+    </script>
+
+    <script type="module">
+        // ============================================================
+        // IMPORTS
+        // ============================================================
+        import { initializeApp } from "firebase/app";
+        import { getAnalytics } from "firebase/analytics";
+        import {
+            getAuth,
+            onAuthStateChanged,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword,
+            signOut
+        } from "firebase/auth";
+        import {
+            getDatabase,
+            ref,
+            set,
+            get,
+            push,
+            update,
+            remove,
+            onValue
+        } from "firebase/database";
+
+        // ============================================================
+        // FIREBASE CONFIG
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAp2vzdLzbuHCiKVc7Yvl208XWR4qvIgAM",
+            authDomain: "lockdown-store-a4dbd.firebaseapp.com",
+            databaseURL: "https://lockdown-store-a4dbd-default-rtdb.firebaseio.com",
+            projectId: "lockdown-store-a4dbd",
+            storageBucket: "lockdown-store-a4dbd.firebasestorage.app",
+            messagingSenderId: "133081203383",
+            appId: "1:133081203383:web:36359e7aeb32e7f2230332",
+            measurementId: "G-0G03G0Q8SB"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        // ============================================================
+        // STATE
+        // ============================================================
+        let currentUser = null;
+        let currentUserId = null;
+        let products = [];
+        let cart = {};
+        let wishlist = {};
+        let orders = [];
+        let sliderImages = [];
+        let categories = [];
+        let currentCategory = 'All';
+        let sliderIndex = 0;
+        let sliderInterval = null;
+
+        const categoryColors = [
+            '#1a237e', '#4ecdc4', '#ff6b6b', '#ffd93d', '#6bcb77',
+            '#4d96ff', '#ff9f43', '#a29bfe', '#fd79a8', '#00b894',
+            '#e17055', '#0984e3', '#6c5ce7', '#fdcb6e', '#e84393'
+        ];
+
+        // ============================================================
+        // DOM REFS
+        // ============================================================
+        const $ = (s) => document.querySelector(s);
+        const $$ = (s) => document.querySelectorAll(s);
+
+        const pageSections = {
+            home: $('#page-home'),
+            search: $('#page-search'),
+            cart: $('#page-cart'),
+            wishlist: $('#page-wishlist'),
+            orders: $('#page-orders'),
+            profile: $('#page-profile'),
+            about: $('#page-about'),
+            contact: $('#page-contact')
+        };
+
+        const navItems = $$('#bottom-nav .nav-item');
+        const authDot = $('#authDot');
+        const authModal = $('#authModal');
+        const productModal = $('#productModal');
+        const checkoutModal = $('#checkoutModal');
+        const menuOverlay = $('#menuOverlay');
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        function showToast(message, type = 'info') {
+            const container = $('#toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateX(80px)';
+                setTimeout(() => toast.remove(), 400);
+            }, 3500);
+        }
+
+        // ============================================================
+        // NAVIGATION / ROUTING
+        // ============================================================
+        function navigateTo(page) {
+            // Hide all sections
+            Object.values(pageSections).forEach(el => el.classList.remove('active'));
+            // Show target
+            const target = pageSections[page];
+            if (target) target.classList.add('active');
+            // Update nav
+            navItems.forEach(item => {
+                item.classList.toggle('active', item.dataset.page === page);
+            });
+            // Close menu
+            menuOverlay.classList.remove('open');
+            // Update URL hash
+            if (location.hash !== `#${page}`) {
+                history.pushState(null, '', `#${page}`);
+            }
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Handle hash changes
+        window.addEventListener('hashchange', () => {
+            const page = location.hash.replace('#', '') || 'home';
+            if (pageSections[page]) navigateTo(page);
+        });
+
+        // Nav clicks
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = item.dataset.page;
+                if (page === 'menu') {
+                    openMenu();
+                    return;
+                }
+                navigateTo(page);
+            });
+        });
+
+        // Search toggle
+        $('#searchToggle').addEventListener('click', () => {
+            navigateTo('search');
+            setTimeout(() => $('#searchInput').focus(), 200);
+        });
+
+        // Auth toggle
+        $('#authToggle').addEventListener('click', () => {
+            if (currentUser) {
+                navigateTo('profile');
+            } else {
+                openAuthModal();
+            }
+        });
+
+        // ============================================================
+        // AUTH MODAL
+        // ============================================================
+        function openAuthModal(tab = 'login') {
+            authModal.classList.add('open');
+            switchTab(tab);
+        }
+
+        function closeAuthModal() {
+            authModal.classList.remove('open');
+        }
+
+        function switchTab(tab) {
+            const tabs = $$('.auth-tabs button');
+            tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+            $('#loginForm').classList.toggle('hidden', tab !== 'login');
+            $('#registerForm').classList.toggle('hidden', tab !== 'register');
+            $('#loginError').textContent = '';
+            $('#registerError').textContent = '';
+        }
+
+        $$('.auth-tabs button').forEach(btn => {
+            btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+        });
+
+        $('#authModalClose').addEventListener('click', closeAuthModal);
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) closeAuthModal();
+        });
+
+        // ---- Login ----
+        $('#loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = $('#loginEmail').value.trim();
+            const password = $('#loginPassword').value;
+            const errEl = $('#loginError');
+            errEl.textContent = '';
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                closeAuthModal();
+                showToast('Welcome back!', 'success');
+            } catch (err) {
+                errEl.textContent = err.message;
+            }
+        });
+
+        // ---- Register ----
+        $('#registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = $('#regUsername').value.trim();
+            const phone = $('#regPhone').value.trim();
+            const email = $('#regEmail').value.trim();
+            const password = $('#regPassword').value;
+            const confirm = $('#regConfirm').value;
+            const errEl = $('#registerError');
+            errEl.textContent = '';
+            if (password !== confirm) {
+                errEl.textContent = 'Passwords do not match.';
+                return;
+            }
+            if (password.length < 6) {
+                errEl.textContent = 'Password must be at least 6 characters.';
+                return;
+            }
+            try {
+                const cred = await createUserWithEmailAndPassword(auth, email, password);
+                const uid = cred.user.uid;
+                // Save user profile
+                await set(ref(db, `users/${uid}`), {
+                    username,
+                    phoneNumber: phone,
+                    email,
+                    createdAt: Date.now()
+                });
+                closeAuthModal();
+                showToast('Account created successfully!', 'success');
+            } catch (err) {
+                errEl.textContent = err.message;
+            }
+        });
+
+        // ============================================================
+        // AUTH STATE
+        // ============================================================
+        onAuthStateChanged(auth, async (user) => {
+            currentUser = user;
+            currentUserId = user ? user.uid : null;
+
+            if (user) {
+                authDot.className = 'auth-dot logged-in';
+                // Load user data
+                await loadUserData(user.uid);
+                // Load orders
+                await loadOrders(user.uid);
+                // Update UI
+                updateBadges();
+                renderProfile();
+                renderOrders();
+                renderCart();
+                renderWishlist();
+            } else {
+                authDot.className = 'auth-dot';
+                cart = {};
+                wishlist = {};
+                orders = [];
+                updateBadges();
+                renderCart();
+                renderWishlist();
+                renderOrders();
+                $('#profileCard').innerHTML =
+                    `<div class="empty-state"><i class="fas fa-user"></i><h3>Not Logged In</h3><p>Please log in to view your profile.</p></div>`;
+                // If on protected page, redirect to home
+                const active = document.querySelector('.page-section.active');
+                if (active) {
+                    const id = active.id.replace('page-', '');
+                    if (['cart', 'wishlist', 'orders', 'profile'].includes(id)) {
+                        navigateTo('home');
+                    }
+                }
+            }
+        });
+
+        // ============================================================
+        // LOAD USER DATA (cart, wishlist)
+        // ============================================================
+        async function loadUserData(uid) {
+            try {
+                const snap = await get(ref(db, `users/${uid}`));
+                if (snap.exists()) {
+                    const data = snap.val();
+                    cart = data.cart || {};
+                    wishlist = data.wishlist || {};
+                } else {
+                    cart = {};
+                    wishlist = {};
+                }
+            } catch (e) {
+                console.warn('Error loading user data:', e);
+                cart = {};
+                wishlist = {};
+            }
+            updateBadges();
+        }
+
+        // ============================================================
+        // LOAD ORDERS
+        // ============================================================
+        async function loadOrders(uid) {
+            try {
+                const snap = await get(ref(db, `orders/${uid}`));
+                if (snap.exists()) {
+                    const data = snap.val();
+                    orders = Object.values(data);
+                } else {
+                    orders = [];
+                }
+            } catch (e) {
+                orders = [];
+            }
+        }
+
+        // ============================================================
+        // BADGES
+        // ============================================================
+        function updateBadges() {
+            const cartCount = Object.values(cart).reduce((sum, i) => sum + (i.quantity || 0), 0);
+            const wishCount = Object.keys(wishlist).length;
+            const cartBadge = $('#cartBadge');
+            const wishBadge = $('#wishBadge');
+            if (cartCount > 0) { cartBadge.textContent = cartCount;
+                cartBadge.classList.remove('hidden'); } else { cartBadge.classList.add('hidden'); }
+            if (wishCount > 0) { wishBadge.textContent = wishCount;
+                wishBadge.classList.remove('hidden'); } else { wishBadge.classList.add('hidden'); }
+        }
+
+        // ============================================================
+        // LOAD PRODUCTS
+        // ============================================================
+        async function loadProducts() {
+            try {
+                const snap = await get(ref(db, 'products'));
+                if (snap.exists()) {
+                    const data = snap.val();
+                    products = Object.keys(data).map(key => ({ id: key, ...data[key] }));
+                } else {
+                    products = [];
+                }
+                // Extract categories
+                const cats = new Set(products.map(p => p.category).filter(Boolean));
+                categories = ['All', ...cats];
+                renderCategories();
+                renderProducts();
+            } catch (e) {
+                console.warn('Error loading products:', e);
+                products = [];
+                renderProducts();
+            }
+        }
+
+        // ============================================================
+        // LOAD SLIDER IMAGES
+        // ============================================================
+        async function loadSliderImages() {
+            try {
+                const snap = await get(ref(db, 'sliderImages'));
+                if (snap.exists()) {
+                    const data = snap.val();
+                    sliderImages = Object.values(data).map(item => item.downloadURL).filter(Boolean);
+                } else {
+                    sliderImages = [];
+                }
+                renderSlider();
+            } catch (e) {
+                sliderImages = [];
+                renderSlider();
+            }
+        }
+
+        // ============================================================
+        // RENDER CATEGORIES
+        // ============================================================
+        function renderCategories() {
+            const container = $('#category-scroll');
+            container.innerHTML = '';
+            categories.forEach((cat, i) => {
+                const el = document.createElement('span');
+                el.className = `category-bubble${cat === currentCategory ? ' active' : ''}`;
+                el.textContent = cat;
+                const color = categoryColors[i % categoryColors.length];
+                el.style.background = cat === 'All' ? '#1a237e' : color;
+                el.dataset.category = cat;
+                el.addEventListener('click', () => {
+                    currentCategory = cat;
+                    renderCategories();
+                    renderProducts();
+                });
+                container.appendChild(el);
+            });
+        }
+
+        // ============================================================
+        // RENDER PRODUCTS
+        // ============================================================
+        function renderProducts(filter = '') {
+            const grid = $('#product-grid');
+            let list = products;
+            if (currentCategory !== 'All') {
+                list = list.filter(p => p.category === currentCategory);
+            }
+            if (filter) {
+                const f = filter.toLowerCase();
+                list = list.filter(p =>
+                    p.name?.toLowerCase().includes(f) ||
+                    p.category?.toLowerCase().includes(f) ||
+                    p.description?.toLowerCase().includes(f)
+                );
+            }
+            if (list.length === 0) {
+                grid.innerHTML =
+                    `<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-box-open"></i><h3>No products found</h3></div>`;
+                return;
+            }
+            grid.innerHTML = list.map(p => `
+                <div class="product-card" data-id="${p.id}">
+                    <div class="img-wrap">
+                        <img src="${p.imageUrl || 'https://via.placeholder.com/300x300?text=No+Image'}" alt="${p.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'" />
+                    </div>
+                    <div class="info">
+                        <div class="name">${p.name || 'Unnamed'}</div>
+                        <div class="category">${p.category || 'General'}</div>
+                        <div class="price">₦${Number(p.price || 0).toLocaleString()}</div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-cart" data-id="${p.id}"><i class="fas fa-shopping-cart"></i> Add</button>
+                        <button class="btn-wish ${wishlist[p.id] ? 'wish-active' : ''}" data-id="${p.id}"><i class="fas fa-heart"></i></button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Event listeners
+            grid.querySelectorAll('.product-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('button')) return;
+                    const id = card.dataset.id;
+                    const p = products.find(x => x.id === id);
+                    if (p) openProductDetail(p);
+                });
+            });
+
+            grid.querySelectorAll('.btn-cart').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    addToCart(id);
+                });
+            });
+
+            grid.querySelectorAll('.btn-wish').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    toggleWishlist(id);
+                });
+            });
+        }
+
+        // ============================================================
+        // SLIDER
+        // ============================================================
+        function renderSlider() {
+            const container = $('#sliderContainer');
+            const indicators = $('#sliderIndicators');
+            container.innerHTML = '';
+            indicators.innerHTML = '';
+
+            if (!sliderImages || sliderImages.length === 0) {
+                container.innerHTML =
+                    `<div class="slide-fallback active">Lockdown Store</div>`;
+                indicators.innerHTML = '';
+                return;
+            }
+
+            sliderImages.forEach((url, i) => {
+                const img = document.createElement('img');
+                img.className = `slide${i === 0 ? ' active' : ''}`;
+                img.src = url;
+                img.alt = `Slide ${i+1}`;
+                img.loading = 'lazy';
+                container.appendChild(img);
+
+                const dot = document.createElement('span');
+                dot.className = i === 0 ? 'active' : '';
+                dot.dataset.index = i;
+                indicators.appendChild(dot);
+            });
+
+            // Indicator clicks
+            indicators.querySelectorAll('span').forEach(dot => {
+                dot.addEventListener('click', () => {
+                    goToSlide(parseInt(dot.dataset.index));
+                });
+            });
+
+            sliderIndex = 0;
+            startSlider();
+        }
+
+        function goToSlide(index) {
+            const slides = $('#sliderContainer').querySelectorAll('.slide');
+            const dots = $('#sliderIndicators').querySelectorAll('span');
+            if (!slides.length) return;
+            slides.forEach(s => s.classList.remove('active'));
+            dots.forEach(d => d.classList.remove('active'));
+            sliderIndex = (index + slides.length) % slides.length;
+            slides[sliderIndex].classList.add('active');
+            dots[sliderIndex].classList.add('active');
+        }
+
+        function startSlider() {
+            if (sliderInterval) clearInterval(sliderInterval);
+            if (sliderImages.length <= 1) return;
+            sliderInterval = setInterval(() => {
+                goToSlide(sliderIndex + 1);
+            }, 5000);
+        }
+
+        $('#sliderPrev').addEventListener('click', () => {
+            goToSlide(sliderIndex - 1);
+            startSlider();
+        });
+        $('#sliderNext').addEventListener('click', () => {
+            goToSlide(sliderIndex + 1);
+            startSlider();
+        });
+
+        // ============================================================
+        // PRODUCT DETAIL MODAL
+        // ============================================================
+        function openProductDetail(product) {
+            const content = $('#productDetailContent');
+            const inWish = !!wishlist[product.id];
+            content.innerHTML = `
+                <div style="text-align:center;">
+                    <img src="${product.imageUrl || 'https://via.placeholder.com/400x400?text=No+Image'}" alt="${product.name}" style="width:100%;max-height:300px;object-fit:cover;border-radius:var(--radius-sm);" onerror="this.src='https://via.placeholder.com/400x400?text=No+Image'" />
+                    <h2 style="margin-top:12px;font-size:20px;">${product.name}</h2>
+                    <div style="color:var(--text-light);font-size:14px;">${product.category || 'General'}</div>
+                    <div style="font-size:24px;font-weight:700;color:var(--primary);margin:6px 0;">₦${Number(product.price || 0).toLocaleString()}</div>
+                    <p style="font-size:14px;color:var(--text-light);margin:8px 0;">${product.description || ''}</p>
+                    <div style="display:flex;gap:10px;margin-top:12px;justify-content:center;">
+                        <button class="btn-cart" data-id="${product.id}" style="padding:10px 28px;background:var(--primary);color:#fff;border-radius:var(--radius-sm);font-weight:600;"><i class="fas fa-shopping-cart"></i> Add to Cart</button>
+                        <button class="btn-wish-detail ${inWish ? 'wish-active' : ''}" data-id="${product.id}" style="padding:10px 20px;background:${inWish ? 'var(--danger)' : 'var(--border)'};color:${inWish ? '#fff' : 'var(--text-light)'};border-radius:var(--radius-sm);font-weight:600;"><i class="fas fa-heart"></i> ${inWish ? 'Remove' : 'Wishlist'}</button>
+                    </div>
+                </div>
+            `;
+            productModal.classList.add('open');
+
+            content.querySelector('.btn-cart')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                addToCart(product.id);
+            });
+            content.querySelector('.btn-wish-detail')?.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleWishlist(product.id);
+                // Refresh detail view
+                openProductDetail(product);
+            });
+        }
+
+        $('#productModalClose').addEventListener('click', () => productModal.classList.remove('open'));
+        productModal.addEventListener('click', (e) => {
+            if (e.target === productModal) productModal.classList.remove('open');
+        });
+
+        // ============================================================
+        // CART FUNCTIONS
+        // ============================================================
+        async function addToCart(productId) {
+            if (!currentUser) {
+                showToast('Please log in to add items to cart.', 'warning');
+                openAuthModal();
+                return;
+            }
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+
+            const cartRef = ref(db, `users/${currentUserId}/cart/${productId}`);
+            try {
+                const snap = await get(cartRef);
+                if (snap.exists()) {
+                    const data = snap.val();
+                    await update(cartRef, { quantity: (data.quantity || 1) + 1 });
+                } else {
+                    await set(cartRef, {
+                        productId: product.id,
+                        name: product.name,
+                        price: product.price,
+                        imageUrl: product.imageUrl || '',
+                        quantity: 1
+                    });
+                }
+                // Update local cart
+                const snap2 = await get(ref(db, `users/${currentUserId}/cart`));
+                cart = snap2.exists() ? snap2.val() : {};
+                updateBadges();
+                renderCart();
+                showToast(`${product.name} added to cart!`, 'success');
+            } catch (e) {
+                showToast('Error adding to cart.', 'error');
+            }
+        }
+
+        async function removeFromCart(productId) {
+            if (!currentUser) return;
+            try {
+                await remove(ref(db, `users/${currentUserId}/cart/${productId}`));
+                const snap = await get(ref(db, `users/${currentUserId}/cart`));
+                cart = snap.exists() ? snap.val() : {};
+                updateBadges();
+                renderCart();
+            } catch (e) {
+                showToast('Error removing item.', 'error');
+            }
+        }
+
+        async function updateCartQuantity(productId, delta) {
+            if (!currentUser) return;
+            const cartRef = ref(db, `users/${currentUserId}/cart/${productId}`);
+            try {
+                const snap = await get(cartRef);
+                if (snap.exists()) {
+                    const data = snap.val();
+                    const newQty = (data.quantity || 1) + delta;
+                    if (newQty <= 0) {
+                        await remove(cartRef);
+                    } else {
+                        await update(cartRef, { quantity: newQty });
+                    }
+                    const snap2 = await get(ref(db, `users/${currentUserId}/cart`));
+                    cart = snap2.exists() ? snap2.val() : {};
+                    updateBadges();
+                    renderCart();
+                }
+            } catch (e) {
+                showToast('Error updating cart.', 'error');
+            }
+        }
+
+        function renderCart() {
+            const container = $('#cartContainer');
+            const items = Object.values(cart);
+            if (items.length === 0) {
+                container.innerHTML =
+                    `<div class="empty-state"><i class="fas fa-shopping-cart"></i><h3>Your cart is empty</h3><p>Start shopping now!</p></div>`;
+                $('#cartTotal').textContent = '';
+                $('#checkoutBtn').style.display = 'none';
+                return;
+            }
+            $('#checkoutBtn').style.display = 'block';
+            let total = 0;
+            container.innerHTML = items.map(item => {
+                const qty = item.quantity || 1;
+                const price = Number(item.price || 0);
+                const itemTotal = price * qty;
+                total += itemTotal;
+                return `
+                    <div class="cart-item">
+                        <img src="${item.imageUrl || 'https://via.placeholder.com/64x64?text=No+Image'}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/64x64?text=No+Image'" />
+                        <div class="item-detail">
+                            <div class="name">${item.name}</div>
+                            <div class="price">₦${price.toLocaleString()}</div>
+                            <div class="qty-control">
+                                <button class="qty-dec" data-id="${item.productId}">−</button>
+                                <span>${qty}</span>
+                                <button class="qty-inc" data-id="${item.productId}">+</button>
+                            </div>
+                        </div>
+                        <div class="item-total">₦${itemTotal.toLocaleString()}</div>
+                        <button class="remove-btn" data-id="${item.productId}"><i class="fas fa-trash-alt"></i></button>
+                    </div>
+                `;
+            }).join('');
+            $('#cartTotal').textContent = `Total: ₦${total.toLocaleString()}`;
+
+            container.querySelectorAll('.qty-dec').forEach(btn => {
+                btn.addEventListener('click', () => updateCartQuantity(btn.dataset.id, -1));
+            });
+            container.querySelectorAll('.qty-inc').forEach(btn => {
+                btn.addEventListener('click', () => updateCartQuantity(btn.dataset.id, 1));
+            });
+            container.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', () => removeFromCart(btn.dataset.id));
+            });
+        }
+
+        // ============================================================
+        // WISHLIST FUNCTIONS
+        // ============================================================
+        async function toggleWishlist(productId) {
+            if (!currentUser) {
+                showToast('Please log in to manage wishlist.', 'warning');
+                openAuthModal();
+                return;
+            }
+            const wishRef = ref(db, `users/${currentUserId}/wishlist/${productId}`);
+            try {
+                const snap = await get(wishRef);
+                if (snap.exists()) {
+                    await remove(wishRef);
+                    showToast('Removed from wishlist.', 'info');
+                } else {
+                    const product = products.find(p => p.id === productId);
+                    if (product) {
+                        await set(wishRef, {
+                            productId: product.id,
+                            name: product.name,
+                            price: product.price,
+                            imageUrl: product.imageUrl || ''
+                        });
+                        showToast('Added to wishlist!', 'success');
+                    }
+                }
+                const snap2 = await get(ref(db, `users/${currentUserId}/wishlist`));
+                wishlist = snap2.exists() ? snap2.val() : {};
+                updateBadges();
+                renderWishlist();
+                renderProducts();
+            } catch (e) {
+                showToast('Error updating wishlist.', 'error');
+            }
+        }
+
+        async function removeFromWishlist(productId) {
+            if (!currentUser) return;
+            try {
+                await remove(ref(db, `users/${currentUserId}/wishlist/${productId}`));
+                const snap = await get(ref(db, `users/${currentUserId}/wishlist`));
+                wishlist = snap.exists() ? snap.val() : {};
+                updateBadges();
+                renderWishlist();
+                renderProducts();
+            } catch (e) {
+                showToast('Error removing from wishlist.', 'error');
+            }
+        }
+
+        async function moveToCart(productId) {
+            if (!currentUser) return;
+            try {
+                const product = products.find(p => p.id === productId);
+                if (product) {
+                    await addToCart(productId);
+                    await removeFromWishlist(productId);
+                }
+            } catch (e) {
+                showToast('Error moving to cart.', 'error');
+            }
+        }
+
+        function renderWishlist() {
+            const container = $('#wishlistContainer');
+            const items = Object.values(wishlist);
+            if (items.length === 0) {
+                container.innerHTML =
+                    `<div class="empty-state"><i class="fas fa-heart"></i><h3>Your wishlist is empty</h3><p>Save your favorite items here.</p></div>`;
+                return;
+            }
+            container.innerHTML = items.map(item => `
+                <div class="wishlist-item">
+                    <img src="${item.imageUrl || 'https://via.placeholder.com/64x64?text=No+Image'}" alt="${item.name}" onerror="this.src='https://via.placeholder.com/64x64?text=No+Image'" />
+                    <div class="item-detail">
+                        <div class="name">${item.name}</div>
+                        <div class="price">₦${Number(item.price || 0).toLocaleString()}</div>
+                    </div>
+                    <button class="move-btn" data-id="${item.productId}"><i class="fas fa-shopping-cart"></i> Move</button>
+                    <button class="remove-btn" data-id="${item.productId}"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            `).join('');
+
+            container.querySelectorAll('.move-btn').forEach(btn => {
+                btn.addEventListener('click', () => moveToCart(btn.dataset.id));
+            });
+            container.querySelectorAll('.remove-btn').forEach(btn => {
+                btn.addEventListener('click', () => removeFromWishlist(btn.dataset.id));
+            });
+        }
+
+        // ============================================================
+        // ORDERS
+        // ============================================================
+        function renderOrders() {
+            const container = $('#ordersContainer');
+            if (!currentUser) {
+                container.innerHTML =
+                    `<div class="empty-state"><i class="fas fa-box"></i><h3>Log in to see your orders</h3></div>`;
+                return;
+            }
+            if (orders.length === 0) {
+                container.innerHTML =
+                    `<div class="empty-state"><i class="fas fa-box"></i><h3>No orders yet</h3><p>Your orders will appear here.</p></div>`;
+                return;
+            }
+            container.innerHTML = orders.map(order => `
+                <div class="order-card">
+                    <div class="order-header">
+                        <span class="order-id">#${order.orderId || 'N/A'}</span>
+                        <span class="order-date">${order.date ? new Date(order.date).toLocaleDateString() : 'N/A'}</span>
+                        <span class="order-status ${(order.status || 'Pending').toLowerCase()}">${order.status || 'Pending'}</span>
+                    </div>
+                    <div class="order-items">
+                        ${(order.items || []).map(item => `<span>${item.name} × ${item.quantity}</span>`).join(' ')}
+                    </div>
+                    <div class="order-total">Total: ₦${Number(order.totalAmount || 0).toLocaleString()}</div>
+                    <div class="order-address">📍 ${order.shippingAddress || 'N/A'}</div>
+                    <div class="order-address">📞 ${order.phoneNumber || 'N/A'}</div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================================
+        // PROFILE
+        // ============================================================
+        async function renderProfile() {
+            const container = $('#profileCard');
+            if (!currentUser) {
+                container.innerHTML =
+                    `<div class="empty-state"><i class="fas fa-user"></i><h3>Not Logged In</h3></div>`;
+                return;
+            }
+            try {
+                const snap = await get(ref(db, `users/${currentUserId}`));
+                if (snap.exists()) {
+                    const data = snap.val();
+                    const initial = (data.username || 'U').charAt(0).toUpperCase();
+                    container.innerHTML = `
+                        <div class="profile-avatar">${initial}</div>
+                        <div class="profile-field"><span class="label">Username</span><span class="value">${data.username || 'N/A'}</span></div>
+                        <div class="profile-field"><span class="label">Phone</span><span class="value">${data.phoneNumber || 'N/A'}</span></div>
+                        <div class="profile-field"><span class="label">Email</span><span class="value">${data.email || currentUser.email}</span></div>
+                        <div class="profile-field"><span class="label">Member since</span><span class="value">${data.createdAt ? new Date(data.createdAt).toLocaleDateString() : 'N/A'}</span></div>
+                    `;
+                } else {
+                    container.innerHTML =
+                        `<div class="empty-state"><i class="fas fa-user"></i><h3>Profile data not found</h3></div>`;
+                }
+            } catch (e) {
+                container.innerHTML =
+                    `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><h3>Error loading profile</h3></div>`;
+            }
+        }
+
+        // ============================================================
+        // LOGOUT
+        // ============================================================
+        $('#logoutBtn').addEventListener('click', async () => {
+            if (confirm('Are you sure you want to logout?')) {
+                try {
+                    await signOut(auth);
+                    showToast('Logged out successfully.', 'info');
+                    navigateTo('home');
+                } catch (e) {
+                    showToast('Error logging out.', 'error');
+                }
+            }
+        });
+
+        // ============================================================
+        // CHECKOUT
+        // ============================================================
+        $('#checkoutBtn').addEventListener('click', () => {
+            if (!currentUser) {
+                showToast('Please log in to checkout.', 'warning');
+                openAuthModal();
+                return;
+            }
+            const items = Object.values(cart);
+            if (items.length === 0) {
+                showToast('Your cart is empty.', 'warning');
+                return;
+            }
+            // Pre-fill
+            get(ref(db, `users/${currentUserId}`)).then(snap => {
+                if (snap.exists()) {
+                    const data = snap.val();
+                    $('#checkoutName').value = data.username || '';
+                    $('#checkoutPhone').value = data.phoneNumber || '';
+                }
+            });
+            const total = items.reduce((sum, i) => sum + (Number(i.price || 0) * (i.quantity || 1)), 0);
+            $('#checkoutSummary').innerHTML = `
+                <div><strong>${items.length} items</strong></div>
+                <div class="total">Total: ₦${total.toLocaleString()}</div>
+            `;
+            checkoutModal.classList.add('open');
+        });
+
+        $('#checkoutModalClose').addEventListener('click', () => checkoutModal.classList.remove('open'));
+        checkoutModal.addEventListener('click', (e) => {
+            if (e.target === checkoutModal) checkoutModal.classList.remove('open');
+        });
+
+        $('#checkoutForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentUser) return;
+            const name = $('#checkoutName').value.trim();
+            const phone = $('#checkoutPhone').value.trim();
+            const address = $('#checkoutAddress').value.trim();
+            if (!name || !phone || !address) {
+                showToast('Please fill in all fields.', 'warning');
+                return;
+            }
+            const items = Object.values(cart);
+            const total = items.reduce((sum, i) => sum + (Number(i.price || 0) * (i.quantity || 1)), 0);
+
+            try {
+                const orderId = `order_${Date.now()}`;
+                const orderData = {
+                    orderId,
+                    userId: currentUserId,
+                    username: name,
+                    userEmail: currentUser.email,
+                    phoneNumber: phone,
+                    shippingAddress: address,
+                    items: items.map(i => ({ name: i.name, price: i.price, quantity: i.quantity, imageUrl: i
+                            .imageUrl })),
+                    totalAmount: total,
+                    date: Date.now(),
+                    status: 'Pending'
+                };
+                await set(ref(db, `orders/${currentUserId}/${orderId}`), orderData);
+                // Clear cart
+                await remove(ref(db, `users/${currentUserId}/cart`));
+                cart = {};
+                updateBadges();
+                renderCart();
+                checkoutModal.classList.remove('open');
+                showToast('Order placed successfully! 🎉', 'success');
+                await loadOrders(currentUserId);
+                renderOrders();
+                navigateTo('orders');
+            } catch (err) {
+                showToast('Error placing order: ' + err.message, 'error');
+            }
+        });
+
+        // ============================================================
+        // MENU
+        // ============================================================
+        function openMenu() {
+            const container = $('#menuLinks');
+            const isLoggedIn = !!currentUser;
+            const links = isLoggedIn ? [
+                { label: 'Home', page: 'home' },
+                { label: 'Profile', page: 'profile' },
+                { label: 'My Orders', page: 'orders' },
+                { label: 'Wishlist', page: 'wishlist' },
+                { label: 'Cart', page: 'cart' },
+                { label: 'About Us', page: 'about' },
+                { label: 'Contact Us', page: 'contact' },
+                { label: 'Logout', action: 'logout' }
+            ] : [
+                { label: 'Home', page: 'home' },
+                { label: 'About Us', page: 'about' },
+                { label: 'Contact Us', page: 'contact' },
+                { label: 'Login', action: 'login' }
+            ];
+            container.innerHTML = links.map(link => `
+                <button style="padding:14px 16px;border-radius:var(--radius-sm);background:var(--bg);font-weight:500;text-align:left;font-size:15px;transition:var(--transition);display:flex;align-items:center;gap:12px;">
+                    ${link.page ? `<i class="fas fa-${link.page === 'home' ? 'home' : link.page === 'profile' ? 'user' : link.page === 'orders' ? 'box' : link.page === 'wishlist' ? 'heart' : link.page === 'cart' ? 'shopping-cart' : link.page === 'about' ? 'info-circle' : 'envelope'}"></i>` : ''}
+                    ${link.label}
+                </button>
+            `).join('');
+            container.querySelectorAll('button').forEach((btn, i) => {
+                const link = links[i];
+                btn.addEventListener('click', () => {
+                    if (link.page) {
+                        navigateTo(link.page);
+                        menuOverlay.classList.remove('open');
+                    } else if (link.action === 'logout') {
+                        document.getElementById('logoutBtn').click();
+                        menuOverlay.classList.remove('open');
+                    } else if (link.action === 'login') {
+                        menuOverlay.classList.remove('open');
+                        openAuthModal();
+                    }
+                });
+            });
+            menuOverlay.classList.add('open');
+        }
+
+        $('#menuClose').addEventListener('click', () => menuOverlay.classList.remove('open'));
+        menuOverlay.addEventListener('click', (e) => {
+            if (e.target === menuOverlay) menuOverlay.classList.remove('open');
+        });
+
+        // ============================================================
+        // CONTACT FORM
+        // ============================================================
+        $('#contactForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = $('#contactName').value.trim();
+            const email = $('#contactEmail').value.trim();
+            const message = $('#contactMessage').value.trim();
+            if (!name || !email || !message) {
+                showToast('Please fill in all fields.', 'warning');
+                return;
+            }
+            try {
+                const newRef = push(ref(db, 'messages'));
+                await set(newRef, { name, email, message, date: Date.now() });
+                showToast('Message sent successfully!', 'success');
+                $('#contactForm').reset();
+            } catch (err) {
+                showToast('Error sending message.', 'error');
+            }
+        });
+
+        // ============================================================
+        // SEARCH
+        // ============================================================
+        $('#searchInput').addEventListener('input', (e) => {
+            const q = e.target.value.trim();
+            const grid = $('#searchResults');
+            if (!q) {
+                grid.innerHTML =
+                    `<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-search"></i><h3>Type to search</h3></div>`;
+                return;
+            }
+            const results = products.filter(p =>
+                p.name?.toLowerCase().includes(q.toLowerCase()) ||
+                p.category?.toLowerCase().includes(q.toLowerCase()) ||
+                p.description?.toLowerCase().includes(q.toLowerCase())
+            );
+            if (results.length === 0) {
+                grid.innerHTML =
+                    `<div class="empty-state" style="grid-column:1/-1;"><i class="fas fa-box-open"></i><h3>No results found</h3></div>`;
+                return;
+            }
+            grid.innerHTML = results.map(p => `
+                <div class="product-card" data-id="${p.id}">
+                    <div class="img-wrap">
+                        <img src="${p.imageUrl || 'https://via.placeholder.com/300x300?text=No+Image'}" alt="${p.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x300?text=No+Image'" />
+                    </div>
+                    <div class="info">
+                        <div class="name">${p.name}</div>
+                        <div class="category">${p.category || 'General'}</div>
+                        <div class="price">₦${Number(p.price || 0).toLocaleString()}</div>
+                    </div>
+                    <div class="actions">
+                        <button class="btn-cart" data-id="${p.id}"><i class="fas fa-shopping-cart"></i> Add</button>
+                        <button class="btn-wish ${wishlist[p.id] ? 'wish-active' : ''}" data-id="${p.id}"><i class="fas fa-heart"></i></button>
+                    </div>
+                </div>
+            `).join('');
+            grid.querySelectorAll('.btn-cart').forEach(btn => {
+                btn.addEventListener('click', (e) => { e.stopPropagation();
+                    addToCart(btn.dataset.id); });
+            });
+            grid.querySelectorAll('.btn-wish').forEach(btn => {
+                btn.addEventListener('click', (e) => { e.stopPropagation();
+                    toggleWishlist(btn.dataset.id); });
+            });
+            grid.querySelectorAll('.product-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const p = products.find(x => x.id === card.dataset.id);
+                    if (p) openProductDetail(p);
+                });
+            });
+        });
+
+        // ============================================================
+        // INIT
+        // ============================================================
+        async function init() {
+            await loadProducts();
+            await loadSliderImages();
+            // Handle initial hash
+            const hash = location.hash.replace('#', '') || 'home';
+            if (pageSections[hash]) navigateTo(hash);
+            else navigateTo('home');
+        }
+
+        init();
+
+        console.log('Lockdown Store loaded successfully!');
+    </script>
+</body>
+</html>
